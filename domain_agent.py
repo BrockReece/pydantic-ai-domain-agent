@@ -41,19 +41,26 @@ class DomainInfo:
 
 
 @domain_agent.tool
-async def get_domain_availability(ctx: RunContext[Deps], domain_name: str) -> { DomainInfo: DomainInfo }:
-    params = {
-        'domainName': domain_name,
-        'credits': "DA",
-        'apiKey': ctx.deps.domain_api_key
-    }
-    with logfire.span('calling domain availability API', params=params) as span:
-        r = await ctx.deps.client.get(DOMAIN_AVAILABILITY_API_ENDPOINT, params=params)
-        r.raise_for_status()
-        data = r.json()
-        span.set_attribute('response', data)
+async def get_domain_availability(ctx: RunContext[Deps], domain_names: list[str]) -> list[dict]:
+    if ctx.deps.domain_api_key is None:
+        # if no API key is provided, return dummy responses for all domains
+        return [{'domainAvailability': 'UNAVAILABLE', 'domainName': name} for name in domain_names]
+    
+    results = []
+    for domain_name in domain_names:
+        params = {
+            'domainName': domain_name,
+            'credits': "DA",
+            'apiKey': ctx.deps.domain_api_key
+        }
+        with logfire.span('calling domain availability API', params=params) as span:
+            r = await ctx.deps.client.get(DOMAIN_AVAILABILITY_API_ENDPOINT, params=params)
+            r.raise_for_status()
+            data = r.json()
+            span.set_attribute('response', data)
+            results.append(data)
 
-    return data
+    return results
 
 
 async def main():
