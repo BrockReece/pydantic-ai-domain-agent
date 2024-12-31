@@ -72,9 +72,17 @@ async def main():
         )
         
         result = await domain_agent.run(
-            'Is the domain google.com available?', deps=deps
+            'Is the domain brockbuilds.net available?', deps=deps
+        )
+        print('Response:', result.data, result.new_messages())
+
+        result = await domain_agent.run(
+            'Ah ok, can you suggest 5 alternative domain names for a new portfolio website and check if they are available.',
+            deps=deps,
+            message_history=result.new_messages()
         )
         print('Response:', result.data)
+  
 
 
 if __name__ == '__main__':
